@@ -1,6 +1,9 @@
 
 // TODO: Design the specification of available options and their metadata
 
+import fs from "fs";
+import rlPromises from "readline/promises";
+
 // const OPTIONS = ["topic", "language", "stars-min", "stars-max", "created", "sort", "order", "limit", "output-format", "output-file", "force"]
 // Main change: refactor options so that it can be fed straight into yargs.options, so that each option has:
 //  - alias(es) (optional)
@@ -12,18 +15,15 @@
 const OPTIONS = {
     "topic": {
         type: "array",
-        default: [],
         describe: "Filters in repositories with the specified topic(s)"
     },
     "language": {
         type: "array",
-        default: [],
         describe: "Filters in repositories with the specified language(s)"
     },
     "stars-min": {
         type: "number",
-        describe: "Filters out repositories less than the specified minimum",
-        default: 0
+        describe: "Filters out repositories less than the specified minimum"
     },
     "stars-max": {
         type: "number",
@@ -58,12 +58,12 @@ const OPTIONS = {
     "output-format": {
         type: "string",
         describe: "Outputs results in the specified format",
-        default: "pretty",
-        choices: ["pretty", "json", "csv"]
+        default: "stdout",
+        choices: ["stdout", "json", "csv"]
     },
-    "output-file": {
+    "output-name": {
         type: "string",
-        describe: "Outputs results into the specified file (cannot be set if output-format is pretty)",
+        describe: "Outputs results into the specified file (only if output-format is not stdout) - default name is repo-seek-results",
     },
     "force": {
         type: "boolean",
@@ -72,21 +72,48 @@ const OPTIONS = {
     },
 }
 
-// Those options which need extra argument validation:
-// - Limit (to prevent limits greater than 500, hence max 5 API requests)
-// - Output file (to check if the path is valid, and if the file already exists)
+async function confirmOverwrite(file) {
+    const rl = rlPromises.createInterface({input: process.stdin, output: process.stdout})
 
-function validateArguments(option, args) {
+    let answer = await rl.question(`Are you sure you want to overwrite '${file}' (y/n)? `)
+    rl.close()
+
+    answer = answer.trim().toLowerCase()
+    if (["y", "yes"].includes(answer)) return true
+    if (["n", "no"].includes(answer)) return false
+
+    throw new Error("Invalid input. Please provide either 'y'/'yes' or 'n'/'no'")
+}
+
+async function validateArguments(option, args, argv) {
     switch (option) {
-        case "topic":
-        case "language":
+        case "order":
+        case "force":
             break;
-        case "stars-min":
-        case "starsMin":
-            if ((!args && args !== 0) || typeof args !== "number") throw new Error(`An invalid argument was provided for --stars-min`)
-            break;
+        case "output-format":
+            if (!Object.keys(argv).includes("output-name")) {
+                validateArguments("output-name", "repo-seek-results", argv)
+                argv['output-name'] = "repo-seek-results"
+            };
+            break
+        case "limit":
+            if (args > 500) throw new Error(`--limit cannot be greater than 500`);
+            break
+        case "output-name":
+            if (argv['output-format'] === "stdout")
+                throw new Error('Cannot set output name when output format is stdout');
+            
+            const filepath = `${args}.${argv['output-format']}`;
+            if (fs.existsSync(filepath)) {
+                const confirmed = await confirmOverwrite(filepath)
+                if (!confirmed) {
+                    console.log("Terminating... No requests sent.")
+                    process.exit(1)
+                }
+            }
+            break
         default:
-            throw new Error(`Unaccounted-for argument`)
+            throw new Error(`Option '${option}' unaccounted for`)
     }
 }
 
