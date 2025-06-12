@@ -7,18 +7,37 @@
 //  - type
 //  - default (optional)
 //  - description (describe)
-//  - choices
+//  - choices (if relevant)
 
 const OPTIONS = {
     "topic": {
         type: "array",
         default: [],
-        describe: "Filters resulting repositories based on the specified topic(s)"
+        describe: "Filters in repositories with the specified topic(s)"
     },
     "language": {
         type: "array",
         default: [],
-        describe: "Filters resulting repositories based on the specified language(s)"
+        describe: "Filters in repositories with the specified language(s)"
+    },
+    "stars-min": {
+        type: "number",
+        describe: "Filters out repositories less than the specified minimum",
+        default: 0
+    },
+    "stars-max": {
+        type: "number",
+        describe: "Filters out repositories greater than the specified maximum",
+    },
+    "created-before": {
+        type: "string",
+        describe: "Filters out repositories on or after the specified date",
+        choices: ["stars", "forks", "help-wanted-issues", "updated"]
+    },
+    "created-after": {
+        type: "string",
+        describe: "Filters out repositories on or before the specified date",
+        choices: ["stars", "forks", "help-wanted-issues", "updated"]
     },
     "sort": {
         type: "string",
@@ -31,14 +50,31 @@ const OPTIONS = {
         default: "desc",
         choices: ["desc", "asc"]
     },
-
+    "limit": {
+        type: "number",
+        describe: "Sets an upper limit for the number of results (max 500)",
+        default: 100
+    },
     "output-format": {
         type: "string",
         describe: "Outputs results in the specified format",
         default: "pretty",
         choices: ["pretty", "json", "csv"]
     },
+    "output-file": {
+        type: "string",
+        describe: "Outputs results into the specified file (cannot be set if output-format is pretty)",
+    },
+    "force": {
+        type: "boolean",
+        describe: "Toggles forced execution, without any prompts",
+        default: false,
+    },
 }
+
+// Those options which need extra argument validation:
+// - Limit (to prevent limits greater than 500, hence max 5 API requests)
+// - Output file (to check if the path is valid, and if the file already exists)
 
 function validateArguments(option, args) {
     switch (option) {
