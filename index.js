@@ -6,13 +6,11 @@ import optionUtils from "./utils/options.js";
 
 async function processArguments() {
     const argv = yargs(hideBin(process.argv))
-    .array(["topic", "language"])           // these options can take multiple arguments
-    .boolean("force")
     .options(optionUtils.OPTIONS)
     .strictOptions(true)
-    .fail((msg, err, yargs) => {
+    .fail((msg, err, _) => {
         const errorMessage = msg || err.message || "Unknown parsing error"
-        throw new Error(`Parsing error: ${errorMessage}`)
+        throw new Error(errorMessage)
     })
     .exitProcess(false)
     .parserConfiguration({
@@ -21,15 +19,9 @@ async function processArguments() {
     .parse()
 
     const inputOptions = Object.keys(argv).filter(key => key !== "_" && key !== "$0")
-    console.log(inputOptions)
 
-    try {
-        for (const option of inputOptions) {
-            await optionUtils.validateArguments(option, argv[option], argv)
-        }
-    } catch (err) {
-        console.log("\n")
-        throw new Error(`Parsing error: ${err.msg}`)
+    for (const option of inputOptions) {
+        await optionUtils.validateArguments(option, argv[option], argv)
     }
 }
 
@@ -42,10 +34,18 @@ async function processArguments() {
 // TODO: Format results for output
 
 async function main() {
-    await processArguments()
+    let args;
+    try {
+        args = await processArguments()
+    } catch (err) {
+        console.error(`\nParsing error:- ${err.message}`);
+        process.exit(1);
+    }
+
+
 }
 
 main().catch(err => {
-    console.error(`Unhandled error:  + ${err.message}`)
+    console.error(`Unhandled error:-  + ${err.message}`)
     process.exit(1)
 })

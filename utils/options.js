@@ -15,7 +15,7 @@ import rlPromises from "readline/promises";
 const OPTIONS = {
     "topic": {
         type: "array",
-        describe: "Filters in repositories with the specified topic(s)"
+        describe: "Filters in repositories with the specified topic(s)",
     },
     "language": {
         type: "array",
@@ -23,47 +23,56 @@ const OPTIONS = {
     },
     "stars-min": {
         type: "number",
-        describe: "Filters out repositories less than the specified minimum"
+        describe: "Filters out repositories less than the specified minimum",
+        requiresArg: true
     },
     "stars-max": {
         type: "number",
         describe: "Filters out repositories greater than the specified maximum",
+        requiresArg: true
     },
     "created-before": {
         type: "string",
         describe: "Filters out repositories on or after the specified date",
-        choices: ["stars", "forks", "help-wanted-issues", "updated"]
+        choices: ["stars", "forks", "help-wanted-issues", "updated"],
+        requiresArg: true
     },
     "created-after": {
         type: "string",
         describe: "Filters out repositories on or before the specified date",
-        choices: ["stars", "forks", "help-wanted-issues", "updated"]
+        choices: ["stars", "forks", "help-wanted-issues", "updated"],
+        requiresArg: true
     },
     "sort": {
         type: "string",
         describe: "Sorts resulting repositories based on the specified attribute",
-        choices: ["stars", "forks", "help-wanted-issues", "updated"]
+        choices: ["stars", "forks", "help-wanted-issues", "updated"],
+        requiresArg: true
     },
     "order": {
         type: "string",
         describe: "Applies sorting in the specified order",
         default: "desc",
-        choices: ["desc", "asc"]
+        choices: ["desc", "asc"],
+        requiresArg: true
     },
     "limit": {
         type: "number",
         describe: "Sets an upper limit for the number of results (max 500)",
-        default: 100
+        default: 100,
+        requiresArg: true
     },
     "output-format": {
         type: "string",
         describe: "Outputs results in the specified format",
         default: "stdout",
-        choices: ["stdout", "json", "csv"]
+        choices: ["stdout", "json", "csv"],
+        requiresArg: true
     },
     "output-name": {
         type: "string",
         describe: "Outputs results into the specified file (only if output-format is not stdout) - default name is repo-seek-results",
+        requiresArg: true
     },
     "force": {
         type: "boolean",
@@ -82,7 +91,7 @@ async function confirmOverwrite(file) {
     if (["y", "yes"].includes(answer)) return true
     if (["n", "no"].includes(answer)) return false
 
-    throw new Error("Invalid input. Please provide either 'y'/'yes' or 'n'/'no'")
+    throw new Error("Invalid input. Please provide either y/yes or n/no")
 }
 
 async function validateArguments(option, args, argv) {
@@ -92,17 +101,17 @@ async function validateArguments(option, args, argv) {
             break;
         case "output-format":
             if (!Object.keys(argv).includes("output-name")) {
-                validateArguments("output-name", "repo-seek-results", argv)
+                await validateArguments("output-name", "repo-seek-results", argv)
                 argv['output-name'] = "repo-seek-results"
             };
             break
         case "limit":
-            if (args > 500) throw new Error(`--limit cannot be greater than 500`);
+            if (args > 500) throw new Error(`'limit' cannot be greater than 500`);
             break
         case "output-name":
             if (argv['output-format'] === "stdout")
                 throw new Error('Cannot set output name when output format is stdout');
-            
+
             const filepath = `${args}.${argv['output-format']}`;
             if (fs.existsSync(filepath)) {
                 const confirmed = await confirmOverwrite(filepath)
