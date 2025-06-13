@@ -57,6 +57,7 @@ Users will potentially be able to search repositories based on:
   - Does not provide any intermediary confirmation, executes directly
 
 Options to add:
+- Search term (most important)
 - Organisation
 - License
 - Visbility

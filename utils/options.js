@@ -25,12 +25,12 @@ const OPTIONS = {
     },
     "created-before": {
         type: "string",
-        describe: "Filters out repositories on or after the specified date",
+        describe: "Filters out repositories after the specified date",
         requiresArg: true
     },
     "created-after": {
         type: "string",
-        describe: "Filters out repositories on or before the specified date",
+        describe: "Filters out repositories before the specified date",
         requiresArg: true
     },
     "sort": {

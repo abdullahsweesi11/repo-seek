@@ -34,6 +34,9 @@ function processRequest(argv) {
     // Only 5 AND, OR or NOT in query are allowed, per GitHub API
     // Since only AND is used, a maximum of 6 components in the query is enforced
     requestUtils.validateQueryComponents(argv);
+
+    const queryString = requestUtils.generateQueryString(argv);
+    console.log(queryString);
 }
 
 // Note: multiple requests may be sent simply because users want a lot of results (+100)
