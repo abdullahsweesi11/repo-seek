@@ -2,6 +2,8 @@
 
 This tool will provide a CLI interface for interacting with the Github API ecosystem (which means that different API endpoints might be used for different inputs).
 
+Important: the limits imposed by the GitHub API will need to be imposed by this service. Therefore: (list all restrictions at some point)
+
 To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
 - Exporting to different output
 

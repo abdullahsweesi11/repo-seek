@@ -4,14 +4,6 @@
 import fs from "fs";
 import rlPromises from "readline/promises";
 
-// const OPTIONS = ["topic", "language", "stars-min", "stars-max", "created", "sort", "order", "limit", "output-format", "output-file", "force"]
-// Main change: refactor options so that it can be fed straight into yargs.options, so that each option has:
-//  - alias(es) (optional)
-//  - type
-//  - default (optional)
-//  - description (describe)
-//  - choices (if relevant)
-
 const OPTIONS = {
     "topic": {
         type: "array",
@@ -34,13 +26,11 @@ const OPTIONS = {
     "created-before": {
         type: "string",
         describe: "Filters out repositories on or after the specified date",
-        choices: ["stars", "forks", "help-wanted-issues", "updated"],
         requiresArg: true
     },
     "created-after": {
         type: "string",
         describe: "Filters out repositories on or before the specified date",
-        choices: ["stars", "forks", "help-wanted-issues", "updated"],
         requiresArg: true
     },
     "sort": {
@@ -79,53 +69,53 @@ const OPTIONS = {
         describe: "Toggles forced execution, without any prompts",
         default: false,
     },
-}
+};
 
 async function confirmOverwrite(file) {
-    const rl = rlPromises.createInterface({input: process.stdin, output: process.stdout})
+    const rl = rlPromises.createInterface({ input: process.stdin, output: process.stdout });
 
-    let answer = await rl.question(`Are you sure you want to overwrite '${file}' (y/n)? `)
-    rl.close()
+    let answer = await rl.question(`Are you sure you want to overwrite '${file}' (y/n)? `);
+    rl.close();
 
-    answer = answer.trim().toLowerCase()
-    if (["y", "yes"].includes(answer)) return true
-    if (["n", "no"].includes(answer)) return false
+    answer = answer.trim().toLowerCase();
+    if (["y", "yes"].includes(answer)) return true;
+    if (["n", "no"].includes(answer)) return false;
 
-    throw new Error("Invalid input. Please provide either y/yes or n/no")
+    throw new Error("Invalid input. Please provide either y/yes or n/no");
 }
 
 async function validateArguments(option, args, argv) {
     switch (option) {
-        case "order":
-        case "force":
+        case "created-before":
+        case "created-after":
+            const valid = /^\d{4}-\d{2}-\d{2}$/.test(args);
+            if (!valid) throw new Error(`'${option}' must have a format of YYYY-MM-DD`)
             break;
-        case "output-format":
-            if (!Object.keys(argv).includes("output-name")) {
-                await validateArguments("output-name", "repo-seek-results", argv)
-                argv['output-name'] = "repo-seek-results"
-            };
-            break
         case "limit":
             if (args > 500) throw new Error(`'limit' cannot be greater than 500`);
-            break
+            break;
+        case "output-format":
+            if (args !== "stdout" && !Object.keys(argv).includes("output-name")) {
+                await validateArguments("output-name", "repo-seek-results", argv);
+                argv['output-name'] = "repo-seek-results";
+            };
+            break;
         case "output-name":
             if (argv['output-format'] === "stdout")
                 throw new Error('Cannot set output name when output format is stdout');
 
             const filepath = `${args}.${argv['output-format']}`;
-            if (fs.existsSync(filepath)) {
-                const confirmed = await confirmOverwrite(filepath)
+            if (fs.existsSync(filepath) && !Object.keys(argv).includes("force")) {
+                const confirmed = await confirmOverwrite(filepath);
                 if (!confirmed) {
-                    console.log("Terminating... No requests sent.")
-                    process.exit(1)
+                    console.log("Terminating... No requests sent.");
+                    process.exit(1);
                 }
             }
-            break
-        default:
-            throw new Error(`Option '${option}' unaccounted for`)
+            break;
     }
 }
 
 export default {
     validateArguments, OPTIONS
-}
+};
