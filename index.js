@@ -1,15 +1,15 @@
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import optionUtils from "./utils/options.js";
 
-// TODO: Process arguments
+import optionUtils from "./utils/options.js";
+import requestUtils from "./utils/requests.js";
 
 async function processArguments() {
     const argv = yargs(hideBin(process.argv))
     .options(optionUtils.OPTIONS)
     .strictOptions(true)
     .fail((msg, err, _) => {
-        const errorMessage = msg || err.message || "Unknown parsing error"
+        const errorMessage = msg || err.message || "Unknown parsing error."
         throw new Error(errorMessage)
     })
     .exitProcess(false)
@@ -31,7 +31,9 @@ async function processArguments() {
 // TODO: Formulate the request(s) to Github API and validate them
 
 function processRequest(argv) {
-    // const queryParts = ["topic", "language", "stars-min", "stars-max", "created-before", "created-after"]
+    // Only 5 AND, OR or NOT in query are allowed, per GitHub API
+    // Since only AND is used, a maximum of 6 components in the query is enforced
+    requestUtils.validateQueryComponents(argv);
 }
 
 // Note: multiple requests may be sent simply because users want a lot of results (+100)

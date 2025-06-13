@@ -81,7 +81,7 @@ async function confirmOverwrite(file) {
     if (["y", "yes"].includes(answer)) return true;
     if (["n", "no"].includes(answer)) return false;
 
-    throw new Error("Invalid input. Please provide either y/yes or n/no");
+    throw new Error("Invalid input. Please provide either y/yes or n/no.");
 }
 
 async function validateArguments(option, args, argv) {
@@ -89,10 +89,10 @@ async function validateArguments(option, args, argv) {
         case "created-before":
         case "created-after":
             const valid = /^\d{4}-\d{2}-\d{2}$/.test(args);
-            if (!valid) throw new Error(`'${option}' must have a format of YYYY-MM-DD`)
+            if (!valid) throw new Error(`'${option}' must have a format of YYYY-MM-DD.`)
             break;
         case "limit":
-            if (args > 500) throw new Error(`'limit' cannot be greater than 500`);
+            if (args > 500) throw new Error(`'limit' cannot be greater than 500.`);
             break;
         case "output-format":
             if (args !== "stdout" && !Object.keys(argv).includes("output-name")) {
@@ -102,7 +102,7 @@ async function validateArguments(option, args, argv) {
             break;
         case "output-name":
             if (argv['output-format'] === "stdout")
-                throw new Error('Cannot set output name when output format is stdout');
+                throw new Error('Cannot set output name when output format is stdout.');
 
             const filepath = `${args}.${argv['output-format']}`;
             if (fs.existsSync(filepath) && !Object.keys(argv).includes("force")) {
