@@ -1,6 +1,43 @@
+const BASE_URL = "https://api.github.com/search/repositories?"
+
 const HEADERS = {
 
 };
+
+function queryStringHelper(argv) {
+    // Embed sort, order and limit into the query strings
+
+    let prefix = "";
+    const keys = Object.keys(argv);
+
+    if (keys.includes("sort"))
+        prefix += `sort=${argv['sort']}&`;
+    if (keys.includes("order"))
+        prefix += `order=${argv['order']}&`;
+
+    const limit = argv['limit'];
+    const results = [];
+
+    if (limit <= 0)
+        throw new Error(`Invalid limit provided.`);
+
+    if (limit === 30) {
+        results.push(prefix)
+    } else {
+        if (limit <= 100) {
+            results.push(prefix + `per_page=${limit}`)
+        } else {
+            for (let i = 1; i <= Math.ceil(limit/100); i++) {
+                if (i * 100 < limit)
+                    results.push(prefix + `page=${i}&per_page=100`);
+                else
+                    results.push(prefix + `page=${i}&per_page=${limit - ((i-1) * 100)}`);
+            }
+        }
+    }
+
+    return results;
+}
 
 function validateQueryComponents(argv) {
     const queryComponents = {
@@ -20,7 +57,7 @@ function validateQueryComponents(argv) {
         throw new Error(`Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`);
 }
 
-function generateQueryString(argv) {
+function generateQueryStrings(argv) {
     const queryArray = [];
     const starsArray = [".."];
     const createdArray = [".."];
@@ -72,10 +109,15 @@ function generateQueryString(argv) {
         queryArray.push(`created:${createdArray.join("")}`);
     }
 
-    return queryArray.join(" ");
+    let results = [];
+    const helperResults = queryStringHelper(argv);
+    for (const queryPart of helperResults)
+        results.push(`${BASE_URL}q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`);
+
+    return results
 }
 
 export default {
     validateQueryComponents,
-    generateQueryString
+    generateQueryStrings
 };

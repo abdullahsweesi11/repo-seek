@@ -49,7 +49,7 @@ const OPTIONS = {
     "limit": {
         type: "number",
         describe: "Sets an upper limit for the number of results (max 500)",
-        default: 100,
+        default: 30,
         requiresArg: true
     },
     "output-format": {

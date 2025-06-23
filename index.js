@@ -7,6 +7,12 @@ import requestUtils from "./utils/requests.js";
 async function processArguments() {
     const argv = yargs(hideBin(process.argv))
     .options(optionUtils.OPTIONS)
+    .check((argv, _) => {
+        if (argv['limit'] > 500)
+            throw new Error("The provided limit exceeds the allowed maximum (500).");
+
+        return true;
+    })
     .strictOptions(true)
     .fail((msg, err, _) => {
         const errorMessage = msg || err.message || "Unknown parsing error."
@@ -35,13 +41,36 @@ function processRequest(argv) {
     // Since only AND is used, a maximum of 6 components in the query is enforced
     requestUtils.validateQueryComponents(argv);
 
-    const queryString = requestUtils.generateQueryString(argv);
-    console.log(queryString);
+    return requestUtils.generateQueryStrings(argv);
 }
 
 // Note: multiple requests may be sent simply because users want a lot of results (+100)
-
 // TODO: Send the request(s)
+
+async function sendRequests(urls) {
+    let items = [];
+    let total_count = NaN;
+    let incomplete_results = false;
+
+    for (const url of urls) {
+        const response = await fetch(url);
+        const responseJson = await response.json();
+
+        if (isNaN(total_count))
+            total_count = responseJson['total_count'];
+        if (!incomplete_results && responseJson['incomplete_results'])
+            incomplete_results = true;
+
+        items.push(...responseJson['items'])
+    }
+
+    return {
+        total_count,
+        incomplete_results,
+        items
+    }
+    
+}
 
 // TODO: Format results for output
 
@@ -50,19 +79,21 @@ async function main() {
     try {
         argv = await processArguments();
     } catch (err) {
-        console.error(`\nParsing error:- ${err.message}`);
+        console.error(`Parsing error:- ${err.message}`);
         process.exit(1);
     }
 
-    let request;
+    let requestUrls;
     try {
-        request = await processRequest(argv);
+        requestUrls = await processRequest(argv);
+        console.log(requestUrls)
     } catch (err) {
-        console.error(`\nValidation error:- ${err.message}`);
+        console.error(`Validation error:- ${err.message}`);
         process.exit(1);
     }
 
-
+    const result = await sendRequests(requestUrls);
+    console.log(result)
 }
 
 main().catch(err => {

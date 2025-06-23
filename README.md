@@ -5,6 +5,8 @@ This tool will provide a CLI interface for interacting with the Github API ecosy
 Important: the limits imposed by the GitHub API will need to be imposed by this service. Therefore: (list all restrictions at some point)
 In the future, explain clearly the rules (e.g. max 6 query components for topic, language, stars, created).
 
+Note: search will not check for exact matches, but only looks for instances including the search terms
+
 To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
 - Exporting to different output
 
@@ -38,8 +40,8 @@ Users will potentially be able to search repositories based on:
 
 - Limit:
   - Takes in a single argument
-  - Argument must be a number less than or equal to 500
-  - Default: 100
+  - Argument must be less than or equal to 500
+  - Default: 30
 
 - Output Format:
   - Takes in a single argument
