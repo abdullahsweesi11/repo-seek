@@ -18,9 +18,6 @@ function queryStringHelper(argv) {
     const limit = argv['limit'];
     const results = [];
 
-    if (limit <= 0)
-        throw new Error(`Invalid limit provided.`);
-
     if (limit === 30) {
         results.push(prefix)
     } else {

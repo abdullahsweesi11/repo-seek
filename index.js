@@ -3,13 +3,14 @@ import {hideBin} from 'yargs/helpers';
 
 import optionUtils from "./utils/options.js";
 import requestUtils from "./utils/requests.js";
+import tryWithErrorHandling from "./utils/utils.js";
 
 async function processArguments() {
     const argv = yargs(hideBin(process.argv))
     .options(optionUtils.OPTIONS)
     .check((argv, _) => {
-        if (argv['limit'] > 500)
-            throw new Error("The provided limit exceeds the allowed maximum (500).");
+        if (argv['limit'] <= 0 || argv['limit'] > 500)
+            throw new Error("The provided limit is not within the allowed range (1-500).");
 
         return true;
     })
@@ -45,7 +46,7 @@ function processRequest(argv) {
 }
 
 // Note: multiple requests may be sent simply because users want a lot of results (+100)
-// TODO: Send the request(s)
+// TODO: Send the request(s) - extend this to check for rate problems
 
 async function sendRequests(urls) {
     let items = [];
@@ -75,25 +76,14 @@ async function sendRequests(urls) {
 // TODO: Format results for output
 
 async function main() {
-    let argv;
-    try {
-        argv = await processArguments();
-    } catch (err) {
-        console.error(`Parsing error:- ${err.message}`);
-        process.exit(1);
-    }
+    const argv = await tryWithErrorHandling(processArguments, "Parsing");
+    const requestUrls = await tryWithErrorHandling(() => processRequest(argv), "Validation");
 
-    let requestUrls;
-    try {
-        requestUrls = await processRequest(argv);
-        console.log(requestUrls)
-    } catch (err) {
-        console.error(`Validation error:- ${err.message}`);
-        process.exit(1);
-    }
-
-    const result = await sendRequests(requestUrls);
+    const result = await tryWithErrorHandling(() => sendRequests(requestUrls), "Server");
     console.log(result)
+
+    // call a function that checks that nothing went wrong (incomplete_results)
+    // call a function that formats output based on user preference
 }
 
 main().catch(err => {
