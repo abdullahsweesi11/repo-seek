@@ -1,3 +1,4 @@
 .env
 repo-seek-results.*
+node_modules/**
 node_modules
