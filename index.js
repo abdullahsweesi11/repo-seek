@@ -1,5 +1,7 @@
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
+import fs from "fs";
+import { json2csv } from 'json-2-csv';
 
 import optionUtils from "./utils/options.js";
 import requestUtils from "./utils/requests.js";
@@ -9,8 +11,12 @@ async function processArguments() {
     const argv = yargs(hideBin(process.argv))
     .options(optionUtils.OPTIONS)
     .check((argv, _) => {
+        const keys = Object.keys(argv);
         if (argv['limit'] <= 0 || argv['limit'] > 500)
             throw new Error("The provided limit is not within the allowed range (1-500).");
+
+        if (keys.includes('order') && !keys.includes('sort'))
+            throw new Error("Order cannot be configured unless sorting criteria is specified.");
 
         return true;
     })
@@ -33,9 +39,6 @@ async function processArguments() {
 
     return argv;
 }
-
-
-// TODO: Formulate the request(s) to Github API and validate them
 
 function processRequest(argv) {
     // Only 5 AND, OR or NOT in query are allowed, per GitHub API
@@ -70,20 +73,30 @@ async function sendRequests(urls) {
         incomplete_results,
         items
     }
-    
 }
 
-// TODO: Format results for output
+async function displayResults(format, filename, results) {
+    if (format === "stdout") {
+        console.log(results.items);
+    } else if (format === "json") {
+        fs.writeFileSync(filename, JSON.stringify(results.items), "utf-8");
+        console.log(`\nResults can be found in '${filename}'`)
+    } else {
+        fs.writeFileSync(filename, json2csv(results.items), "utf-8");
+        console.log(`\nResults can be found in '${filename}'`)
+    }
+
+    console.log(`\nTotal count: ${results.total_count}`);
+    console.log(`Results returned: ${results.items.length}\n`)
+}
 
 async function main() {
     const argv = await tryWithErrorHandling(processArguments, "Parsing");
     const requestUrls = await tryWithErrorHandling(() => processRequest(argv), "Validation");
-
-    const result = await tryWithErrorHandling(() => sendRequests(requestUrls), "Server");
-    console.log(result)
-
-    // call a function that checks that nothing went wrong (incomplete_results)
-    // call a function that formats output based on user preference
+    const results = await tryWithErrorHandling(() => sendRequests(requestUrls), "Server");
+    await tryWithErrorHandling(() => displayResults(argv['output-format'], argv['output-name'], results), "Output");
+    if (results['incomplete_results'])
+        console.warn("Warning:- Results may be incomplete due to request timeout.")
 }
 
 main().catch(err => {

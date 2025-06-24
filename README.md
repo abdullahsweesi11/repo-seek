@@ -9,6 +9,7 @@ Note: search will not check for exact matches, but only looks for instances incl
 
 To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
 - Exporting to different output
+- Remove urls by default, and ask users to use --include-urls flag, since urls clutter output
 
 Users will potentially be able to search repositories based on:
 
@@ -36,6 +37,7 @@ Users will potentially be able to search repositories based on:
 - Order:
   - Takes in a single argument
   - Argument must be in a specified set (desc, asc)
+  - Cannot be set if sort is not specified
   - Default: desc
 
 - Limit:
@@ -45,8 +47,8 @@ Users will potentially be able to search repositories based on:
 
 - Output Format:
   - Takes in a single argument
-  - Argument must be in a specified set (pretty, json, csv)
-  - Default: pretty
+  - Argument must be in a specified set (stdout, json, csv)
+  - Default: stdout
 
 - Output File:
   - Takes in a single argument

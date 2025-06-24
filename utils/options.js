@@ -3,6 +3,10 @@
 
 import fs from "fs";
 import rlPromises from "readline/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+    
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const OPTIONS = {
     "topic": {
@@ -42,7 +46,6 @@ const OPTIONS = {
     "order": {
         type: "string",
         describe: "Applies sorting in the specified order",
-        default: "desc",
         choices: ["desc", "asc"],
         requiresArg: true
     },
@@ -96,16 +99,16 @@ async function validateArguments(option, args, argv) {
             break;
         case "output-format":
             if (args !== "stdout" && !Object.keys(argv).includes("output-name")) {
-                await validateArguments("output-name", "repo-seek-results", argv);
-                argv['output-name'] = "repo-seek-results";
+                await validateArguments("output-name", `repo-seek-results.${argv['output-format']}`, argv);
+                argv['output-name'] = `repo-seek-results.${argv['output-format']}`;
             };
             break;
         case "output-name":
             if (argv['output-format'] === "stdout")
                 throw new Error('Cannot set output name when output format is stdout.');
 
-            const filepath = `${args}.${argv['output-format']}`;
-            if (fs.existsSync(filepath) && !Object.keys(argv).includes("force")) {
+            const filepath = path.join(__dirname, "..", `${args}`);
+            if (fs.existsSync(filepath) && !argv['force']) {
                 const confirmed = await confirmOverwrite(filepath);
                 if (!confirmed) {
                     console.log("Terminating... No requests sent.");
@@ -117,5 +120,7 @@ async function validateArguments(option, args, argv) {
 }
 
 export default {
-    validateArguments, OPTIONS
+    validateArguments, 
+    OPTIONS,
+    __dirname
 };
