@@ -7,6 +7,8 @@ In the future, explain clearly the rules (e.g. max 6 query components for topic,
 
 Note: search will not check for exact matches, but only looks for instances including the search terms
 
+Note: when using "stdout" as the output method, a maximum of 50 results will be displayed to prevent flooding in the terminal. If you need more than 50 results, use "json" or "csv" as the output method.
+
 To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
 - Exporting to different output
 - Remove urls by default, and ask users to use --include-urls flag, since urls clutter output
