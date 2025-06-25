@@ -1,6 +1,8 @@
 
 import rlPromises from "readline/promises";
-const BASE_URL = "https://api.github.com/search/repositories?"
+const BASE_URL = "https://api.github.com/search/repositories?";
+
+const RATE_DATA_NAME = "rate-limit.json";
 
 async function confirmMultipleRequests(num) {
     const rl = rlPromises.createInterface({ input: process.stdin, output: process.stdout });
@@ -121,11 +123,12 @@ function generateQueryStrings(argv) {
     for (const queryPart of helperResults)
         results.push(`${BASE_URL}q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`);
 
-    return results
+    return results;
 }
 
 export default {
     validateQueryComponents,
     generateQueryStrings,
-    confirmMultipleRequests
+    confirmMultipleRequests,
+    RATE_DATA_NAME
 };

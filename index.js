@@ -1,18 +1,19 @@
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import fs from "fs";
-import rlPromises from "readline/promises";
 import { json2csv } from 'json-2-csv';
 
 import optionUtils from "./utils/options.js";
 import requestUtils from "./utils/requests.js";
+import tmpUtils from "./utils/tmp.js";
 import tryWithErrorHandling from "./utils/utils.js";
 
 // if authentication is added, these attributes need to be set dynamically
 
 const rateLimitInfo = {
     requestsRemaining: 10,
-    requestsLimit: 10
+    requestsLimit: 10,
+    requestsRefresh: null
 }
 
 
@@ -24,8 +25,10 @@ async function processArguments() {
         if (argv['limit'] <= 0 || argv['limit'] > 500)
             throw new Error("The provided limit is not within the allowed range (1-500).");
 
-        if (argv['limit'] > 50 && argv['output-format'] === "stdout")
-            argv['limit'] = 50;
+        if (argv['limit'] > optionUtils.STDOUT_LIMIT && argv['output-format'] === "stdout") {
+            console.warn(`Warning: Limit capped at ${optionUtils.STDOUT_LIMIT} to prevent terminal flooding. Use JSON or CSV for more results.\n`);
+            argv['limit'] = optionUtils.STDOUT_LIMIT;
+        }
 
         if (keys.includes('order') && !keys.includes('sort'))
             throw new Error("Order cannot be configured unless sorting criteria is specified.");
@@ -60,9 +63,6 @@ function processRequest(argv) {
     return requestUtils.generateQueryStrings(argv);
 }
 
-// Note: multiple requests may be sent simply because users want a lot of results (+100)
-// TODO: Send the request(s) - extend this to check for rate problems
-
 async function sendRequests(urls) {
     let items = [];
     let total_count = NaN;
@@ -74,8 +74,9 @@ async function sendRequests(urls) {
 
         if (response.status !== 200) {
             if (response.status === 403) {
-                const timeLeft = (new Date(+response.headers.get('x-ratelimit-reset') * 1000)) - (new Date());
-                throw new Error(`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. This resets in ${Math.ceil(timeLeft / 1000)} seconds.`);
+                rateLimitInfo.requestsRefresh = +response.headers.get('x-ratelimit-reset');
+                tmpUtils.writeTempData(rateLimitInfo, requestUtils.RATE_DATA_NAME);
+                throw new Error(`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`);
             }
             else
                 throw new Error(responseJson.message);
@@ -87,7 +88,8 @@ async function sendRequests(urls) {
             incomplete_results = true;
         rateLimitInfo.requestsRemaining = response.headers.get("x-ratelimit-remaining");
         
-
+        if (!Array.isArray(responseJson['items']))
+            throw new Error("Unexpected response format from Github.")
         items.push(...responseJson['items']);
     }
 
@@ -116,6 +118,12 @@ async function displayResults(format, filename, results) {
 }
 
 async function main() {
+    const rateLimitData = tmpUtils.readTempData(requestUtils.RATE_DATA_NAME);
+    const currentTime = Math.floor((new Date()).getTime() / 1000)
+    if (rateLimitData?.requestsRefresh > currentTime) {
+        throw new Error(`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`)
+    }
+
     const argv = await tryWithErrorHandling(processArguments, "Parsing");
     const requestUrls = await tryWithErrorHandling(() => processRequest(argv), "Validation");
     if (requestUrls.length > 1) {
@@ -132,6 +140,6 @@ async function main() {
 }
 
 main().catch(err => {
-    console.error(`Unhandled error:-  + ${err.message}`)
+    console.error(`Unexpected error:- \n${err.message}`)
     process.exit(1)
 })

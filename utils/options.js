@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
     
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const STDOUT_LIMIT = 50;
 
 const OPTIONS = {
     "topic": {
@@ -118,5 +119,6 @@ async function validateArguments(option, args, argv) {
 export default {
     validateArguments, 
     OPTIONS,
-    __dirname
+    __dirname,
+    STDOUT_LIMIT
 };
