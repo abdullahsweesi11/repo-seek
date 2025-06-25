@@ -1,6 +1,7 @@
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
 import fs from "fs";
+import rlPromises from "readline/promises";
 import { json2csv } from 'json-2-csv';
 
 import optionUtils from "./utils/options.js";
@@ -117,6 +118,13 @@ async function displayResults(format, filename, results) {
 async function main() {
     const argv = await tryWithErrorHandling(processArguments, "Parsing");
     const requestUrls = await tryWithErrorHandling(() => processRequest(argv), "Validation");
+    if (requestUrls.length > 1) {
+        const confirmed = await requestUtils.confirmMultipleRequests(requestUrls.length);
+        if (!confirmed) {
+            console.log("Terminating... No requests sent.");
+            process.exit(1);
+        }
+    }
     const results = await tryWithErrorHandling(() => sendRequests(requestUrls), "Server");
     await tryWithErrorHandling(() => displayResults(argv['output-format'], argv['output-name'], results), "Output");
     if (results['incomplete_results'])

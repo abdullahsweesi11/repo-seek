@@ -1,8 +1,18 @@
+
+import rlPromises from "readline/promises";
 const BASE_URL = "https://api.github.com/search/repositories?"
 
-const HEADERS = {
+async function confirmMultipleRequests(num) {
+    const rl = rlPromises.createInterface({ input: process.stdin, output: process.stdout });
 
-};
+    let answer = await rl.question(`This command will result in ${num} requests. Continue (Y/n)? `);
+    rl.close();
+
+    answer = answer.trim().toLowerCase();
+    if (["n", "no"].includes(answer)) return false;
+    return true;
+    
+}
 
 function queryStringHelper(argv) {
     // Embed sort, order and limit into the query strings
@@ -116,5 +126,6 @@ function generateQueryStrings(argv) {
 
 export default {
     validateQueryComponents,
-    generateQueryStrings
+    generateQueryStrings,
+    confirmMultipleRequests
 };

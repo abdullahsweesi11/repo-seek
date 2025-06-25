@@ -1,6 +1,4 @@
 
-// TODO: Design the specification of available options and their metadata
-
 import fs from "fs";
 import rlPromises from "readline/promises";
 import path from "path";
@@ -77,14 +75,12 @@ const OPTIONS = {
 async function confirmOverwrite(file) {
     const rl = rlPromises.createInterface({ input: process.stdin, output: process.stdout });
 
-    let answer = await rl.question(`Are you sure you want to overwrite '${file}' (y/n)? `);
+    let answer = await rl.question(`Are you sure you want to overwrite '${file}' (Y/n)? `);
     rl.close();
 
     answer = answer.trim().toLowerCase();
-    if (["y", "yes"].includes(answer)) return true;
     if (["n", "no"].includes(answer)) return false;
-
-    throw new Error("Invalid input. Please provide either y/yes or n/no.");
+    return true;
 }
 
 async function validateArguments(option, args, argv) {
