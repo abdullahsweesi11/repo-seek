@@ -1,16 +1,19 @@
 {
-  "name": "repo-seek",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "json-2-csv": "^5.5.9",
-    "yargs": "^18.0.0"
-  }
+	"name": "repo-seek",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"json-2-csv": "^5.5.9",
+		"yargs": "^18.0.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.0.5"
+	}
 }
