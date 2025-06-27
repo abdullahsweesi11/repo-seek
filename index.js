@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { json2csv } from "json-2-csv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { fileURLToPath } from "node:url";
 
 import optionUtils from "./utils/options.js";
 import requestUtils from "./utils/requests.js";
@@ -16,10 +17,15 @@ const rateLimitInfo = {
 	requestsRefresh: null,
 };
 
-async function processArguments() {
+export async function processArguments() {
 	const argv = yargs(hideBin(process.argv))
 		.options(optionUtils.OPTIONS)
 		.check((argv, _) => {
+            if (argv._.length === 0)
+                throw new Error(
+                   "Search query cannot be empty" 
+                );
+
 			const keys = Object.keys(argv);
 			if (argv.limit <= 0 || argv.limit > 500)
 				throw new Error(
@@ -65,15 +71,15 @@ async function processArguments() {
 	return argv;
 }
 
-function processRequest(argv) {
+export function processRequests(argv) {
 	// Only 5 AND, OR or NOT in query are allowed, per GitHub API
 	// Since only AND is used, a maximum of 6 components in the query is enforced
 	requestUtils.validateQueryComponents(argv);
-
-	return requestUtils.generateQueryStrings(argv);
+    const urls = requestUtils.generateQueryStrings(argv);
+	return urls;
 }
 
-async function sendRequests(urls) {
+export async function sendRequests(urls) {
 	const items = [];
 	let total_count = NaN;
 	let incomplete_results = false;
@@ -90,7 +96,7 @@ async function sendRequests(urls) {
 				throw new Error(
 					`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`,
 				);
-			} else throw new Error(responseJson.message);
+			} else throw new Error(`(Forwarded from GitHub:) ${responseJson.message}`);
 		}
 
 		if (Number.isNaN(total_count)) total_count = responseJson.total_count;
@@ -112,7 +118,7 @@ async function sendRequests(urls) {
 	};
 }
 
-async function displayResults(format, filename, results) {
+export async function displayResults(format, filename, results) {
 	if (format === "stdout") {
 		console.log(results.items);
 	} else if (format === "json") {
@@ -131,7 +137,7 @@ async function displayResults(format, filename, results) {
 	console.log(`Results returned: ${results.items.length}\n`);
 }
 
-async function main() {
+export async function main() {
 	const rateLimitData = tmpUtils.readTempData(requestUtils.RATE_DATA_NAME);
 	const currentTime = Math.floor(Date.now() / 1000);
 	if (rateLimitData?.requestsRefresh > currentTime) {
@@ -142,7 +148,7 @@ async function main() {
 
 	const argv = await tryWithErrorHandling(processArguments, "Parsing");
 	const requestUrls = await tryWithErrorHandling(
-		() => processRequest(argv),
+		() => processRequests(argv),
 		"Validation",
 	);
 	if (requestUrls.length > 1) {
@@ -166,7 +172,11 @@ async function main() {
 		console.warn("Warning:- Results may be incomplete due to request timeout.");
 }
 
-main().catch((err) => {
-	console.error(`Unexpected error:- \n${err.message}`);
-	process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    main().catch((err) => {
+        if (err.name && err.name !== "Error")
+            console.error(`${err.name} error:- \n${err.message}`);
+        else
+            console.error(`Unexpected error:- \n${err.message}`);
+    });
+}

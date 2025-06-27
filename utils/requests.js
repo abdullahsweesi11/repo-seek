@@ -1,6 +1,6 @@
 import rlPromises from "node:readline/promises";
 
-const BASE_URL = "https://api.github.com/search/repositories?";
+const BASE_URL = "https://api.github.com/search/repositories";
 
 const RATE_DATA_NAME = "rate-limit.json";
 
@@ -33,7 +33,8 @@ function queryStringHelper(argv) {
 	const results = [];
 
 	if (limit === 30) {
-		results.push(prefix);
+        if (prefix)
+		    results.push(prefix);
 	} else {
 		if (limit <= 100) {
 			results.push(`${prefix}per_page=${limit}`);
@@ -131,9 +132,9 @@ function generateQueryStrings(argv) {
 	const helperResults = queryStringHelper(argv);
 	for (const queryPart of helperResults)
 		results.push(
-			`${BASE_URL}q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`,
+			`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`,
 		);
-
+    
 	return results;
 }
 
