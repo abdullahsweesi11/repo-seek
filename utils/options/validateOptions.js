@@ -71,6 +71,7 @@ function validateLimit(argv) {
 function validateStars(argv) {
     const starsMinPresent = "stars-min" in argv;
     const starsMaxPresent = "stars-max" in argv;
+
     if (starsMinPresent && argv["stars-min"] < 0)
         throw new Error(
             "--stars-min cannot be negative."
@@ -88,18 +89,49 @@ function validateStars(argv) {
 }
 
 
+function isValidDate(date) {
+    const components = date.split("-").map(v => parseInt(v));
+
+    if (components.length !== 3) return false;
+
+    const generatedDate = new Date(components[0], components[1] - 1, components[2]);
+    if (generatedDate.getUTCFullYear() !== components[0] ||
+        generatedDate.getUTCMonth() + 1 !== components[1] ||
+        generatedDate.getUTCDate() !== components[2]) 
+        return false;
+    
+    return true;
+}
+
+
 function validateCreated(argv) {
-    if ("created-before" in argv) {
+    const createdBeforePresent = "created-before" in argv;
+    const createdAfterPresent = "created-after" in argv;
+
+    if (createdBeforePresent) {
         const valid = /^\d{4}-\d{2}-\d{2}$/.test(argv["created-before"]);
         if (!valid)
             throw new Error("--created-before must have a format of YYYY-MM-DD.");
     }
 
-    if ("created-after" in argv) {
+    if (createdAfterPresent) {
         const valid = /^\d{4}-\d{2}-\d{2}$/.test(argv["created-after"]);
         if (!valid)
             throw new Error("--created-after must have a format of YYYY-MM-DD.");
     }
+
+    if (createdBeforePresent && createdAfterPresent && 
+        (new Date(argv["created-before"])) < (new Date(argv["created-after"])))
+        throw new Error("--created-before must be after --created-after")
+    
+    if (createdBeforePresent && !isValidDate(argv["created-before"]))
+        throw new Error("--created-before is an invalid date")
+
+    if (createdAfterPresent && 
+        (!isValidDate(argv["created-after"]) || (new Date(argv["created-after"])) > (new Date())))
+        throw new Error("--created-after is an invalid date")
+
+
 }
 
 

@@ -9,6 +9,8 @@ Note: search will not check for exact matches, but only looks for instances incl
 
 Note: when using "stdout" as the output method, a maximum of 50 results will be displayed to prevent flooding in the terminal. If you need more than 50 results, use "json" or "csv" as the output method.
 
+Note: inputting extremely large numbers (>) into numerical types can lead to undefined results.
+
 To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
 - Exporting to different output
 - Remove urls by default, and ask users to use --include-urls flag, since urls clutter output
@@ -27,7 +29,7 @@ Users will potentially be able to search repositories based on:
   - Takes in a single argument
   - Arguments must follow the Github syntax rules
 
-- Creation date:
+- Creation date: (inclusive)
   - Takes in a single argument
   - Arguments must follow the Github syntax rules, and the date must be formatted correctly
 

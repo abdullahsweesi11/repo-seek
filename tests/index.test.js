@@ -11,9 +11,6 @@ describe("Argument parsing", () => {
 
     const originalArgv = [...process.argv];
 
-    const emptyQueryMessage = "Search query cannot be empty (add query-specific options)";
-    const queryLimitHitMessage = `Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`;
-
     afterEach(() => {
         process.argv = originalArgv;
     })
@@ -21,6 +18,8 @@ describe("Argument parsing", () => {
     // EMPTY QUERY
 
     describe("Empty Query", () => {
+        const emptyQueryMessage = "Search query cannot be empty (add query-specific options)";
+
         test("empty search query", async () => {
             process.argv = ["node", "index.js"]
             await expect(processArguments()).rejects.toThrow(emptyQueryMessage);
@@ -44,6 +43,9 @@ describe("Argument parsing", () => {
             'output-format': 'stdout',
             limit: 30,
         }
+
+        const queryLimitHitMessage = `Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`;
+
 
         test("empty string argument for topic", async () => {
             process.argv = ["node", "index.js", "--topic", ""]
@@ -243,6 +245,9 @@ describe("Argument parsing", () => {
             'output-format': 'stdout',
             limit: 30,
         }
+
+        const queryLimitHitMessage = `Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`;
+
 
         test("empty string argument for language", async () => {
             process.argv = ["node", "index.js", "--language", ""]
@@ -530,12 +535,23 @@ describe("Argument parsing", () => {
             language: ["javascript"]
         }
 
+        const dateFormatMessage = "--created-before must have a format of YYYY-MM-DD."
+        const invalidDateMessage = "--created-before is an invalid date";
+
         test("normal execution", async () => {
             process.argv = [...preset, "--created-before", "2024-01-01"]
             await expect(processArguments()).resolves.toEqual(
                 expect.objectContaining({
                     ...basicArgv,
                     "created-before": "2024-01-01"
+                })
+            )
+
+            process.argv = [...preset, "--created-before", "2024-02-29"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "created-before": "2024-02-29"
                 })
             )
 
@@ -557,23 +573,79 @@ describe("Argument parsing", () => {
             )
         })
 
-        test("incorrect format", async () => {
-            // (YYYY|YY)-(M|MM)-(D|DD) (e.g. 22-4-3)
-            // MM-DD-YYYY or DD-MM-YYYY
-            // YYYY/MM/DD
-            // MM/DD/YYYY or DD/MM/YYYY
-            // YYYYMMDD
+        test("invalid format", async () => {
+            process.argv = [...preset, "--created-before", "2024-1-1"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "2024-01-1"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "2024-1-01"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "24-1-1"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "01-01-2024"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "2024/01/01"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "2024/1/1"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "24/1/1"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "01/01/2024"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "1/1/2024"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "1/1/24"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
+
+            process.argv = [...preset, "--created-before", "20240101"]
+            await expect(processArguments()).rejects.toThrow(dateFormatMessage)
         })
 
         test("invalid values", async () => {
-            // DD is greater than 31, 31 in (e.g.) June, and >29 in February (also consider leap year)
-            // MM is greater than 12
-            // YYYY is after today for created-after
+            process.argv = [...preset, "--created-before", "2025-01-32"]
+            await expect(processArguments()).rejects.toThrow(invalidDateMessage)
+
+            process.argv = [...preset, "--created-before", "2025-02-29"]
+            await expect(processArguments()).rejects.toThrow(invalidDateMessage)
+
+            process.argv = [...preset, "--created-before", "2025-06-31"]
+            await expect(processArguments()).rejects.toThrow(invalidDateMessage)
+
+            process.argv = [...preset, "--created-before", "2024-13-01"]
+            await expect(processArguments()).rejects.toThrow(invalidDateMessage)
+
+            const currentDate = new Date();
+            const afterToday = [`${currentDate.getUTCFullYear() + 1}`.padStart(4, "0"), 
+                                `${currentDate.getUTCMonth()}`.padStart(2, "0"), 
+                                `${currentDate.getUTCDate()}`.padStart(2, "0")]
+            process.argv = [...preset, "--created-before", afterToday.join("-")]
+            await expect(processArguments()).rejects.toThrow(invalidDateMessage)
         })
 
         test("--created-before is before --created-after", async () => {
-            // DD is greater than 31, 31 in (e.g.) June, and >29 in February (also consider leap year)
-            // MM is greater than 12
+            process.argv = [...preset, "--created-after", "2025-01-01", "--created-before", "2024-01-01"]
+            await expect(processArguments()).rejects.toThrow("--created-before must be after --created-after")
+        })
+
+        test("--created-before same as --created-after", async () => {
+            process.argv = [...preset, "--created-after", "2025-01-01", "--created-before", "2025-01-01"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "created-before": "2025-01-01",
+                    "created-after": "2025-01-01"
+                })
+            )
         })
     })
 })
