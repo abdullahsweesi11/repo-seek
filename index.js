@@ -21,12 +21,19 @@ export async function processArguments() {
 	const argv = yargs(hideBin(process.argv))
 		.options(optionUtils.OPTIONS)
 		.check((argv, _) => {
-            if (argv._.length === 0)
-                throw new Error(
-                   "Search query cannot be empty" 
-                );
-
 			const keys = Object.keys(argv);
+
+            const nonEmptyQuery = ["topic", "language", "stars-min", "stars-max", "created-before", "created-after"]
+                                    .map(v => keys.includes(v))
+                                    .some(v => v)
+
+            if (!nonEmptyQuery)
+                throw new Error(
+                   "Search query cannot be empty (add query-specific options)" 
+                );
+            
+            optionUtils.validateQueryComponents(argv);
+
 			if (argv.limit <= 0 || argv.limit > 500)
 				throw new Error(
 					"The provided limit is not within the allowed range (1-500).",
@@ -72,11 +79,7 @@ export async function processArguments() {
 }
 
 export function processRequests(argv) {
-	// Only 5 AND, OR or NOT in query are allowed, per GitHub API
-	// Since only AND is used, a maximum of 6 components in the query is enforced
-	requestUtils.validateQueryComponents(argv);
-    const urls = requestUtils.generateQueryStrings(argv);
-	return urls;
+    return requestUtils.generateQueryStrings(argv);                 // remove this redundant function
 }
 
 export async function sendRequests(urls) {

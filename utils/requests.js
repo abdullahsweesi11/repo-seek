@@ -50,29 +50,6 @@ function queryStringHelper(argv) {
 	return results;
 }
 
-function validateQueryComponents(argv) {
-	const queryComponents = {
-		topic: 0,
-		language: 0,
-		stars: 0,
-		created: 0,
-	};
-
-	for (const [key, value] of Object.entries(argv)) {
-		if (key === "topic" || key === "language")
-			queryComponents[key] += value.length;
-		if (key.startsWith("stars") || key.startsWith("created")) {
-			const prefix = key.startsWith("stars") ? "stars" : "created";
-			queryComponents[prefix] = Math.min(1 + queryComponents[prefix], 1);
-		}
-	}
-
-	if (Object.values(queryComponents).reduce((acc, val) => acc + val) > 6)
-		throw new Error(
-			`Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`,
-		);
-}
-
 function generateQueryStrings(argv) {
 	const queryArray = [];
 	const starsArray = [".."];
@@ -130,16 +107,19 @@ function generateQueryStrings(argv) {
 
 	const results = [];
 	const helperResults = queryStringHelper(argv);
-	for (const queryPart of helperResults)
-		results.push(
-			`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`,
-		);
+	if (helperResults.length > 0) {
+		for (const queryPart of helperResults)
+			results.push(
+				`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`,
+			);
+	} else {
+		return [`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}`]
+	}
     
 	return results;
 }
 
 export default {
-	validateQueryComponents,
 	generateQueryStrings,
 	confirmMultipleRequests,
 	RATE_DATA_NAME,

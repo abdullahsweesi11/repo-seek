@@ -8,10 +8,12 @@ const STDOUT_LIMIT = 50;
 
 const OPTIONS = {
 	topic: {
+        string: true,                                                       // 'topic' is an array of strings
 		type: "array",
 		describe: "Filters in repositories with the specified topic(s)",
 	},
 	language: {
+        string: true,                                                       // 'language' is an array of strings
 		type: "array",
 		describe: "Filters in repositories with the specified language(s)",
 	},
@@ -73,6 +75,29 @@ const OPTIONS = {
 	},
 };
 
+function validateQueryComponents(argv) {
+	const queryComponents = {
+		topic: 0,
+		language: 0,
+		stars: 0,
+		created: 0,
+	};
+
+	for (const [key, value] of Object.entries(argv)) {
+		if (key === "topic" || key === "language")
+			queryComponents[key] += value.length;
+		if (key.startsWith("stars") || key.startsWith("created")) {
+			const prefix = key.startsWith("stars") ? "stars" : "created";
+			queryComponents[prefix] = Math.min(1 + queryComponents[prefix], 1);
+		}
+	}
+
+	if (Object.values(queryComponents).reduce((acc, val) => acc + val) > 6)
+		throw new Error(
+			`Query exceeds maximum of 6 components (i.e. topic, language, stars, created). See documentation for details.`,
+		);
+}
+
 async function confirmOverwrite(file) {
 	const rl = rlPromises.createInterface({
 		input: process.stdin,
@@ -129,6 +154,7 @@ async function validateArguments(option, args, argv) {
 }
 
 export default {
+    validateQueryComponents,
 	validateArguments,
 	OPTIONS,
 	__dirname,
