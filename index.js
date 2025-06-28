@@ -4,7 +4,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { fileURLToPath } from "node:url";
 
-import optionUtils from "./utils/options.js";
+import optionUtils from "./utils/options/options.js";
 import requestUtils from "./utils/requests.js";
 import tmpUtils from "./utils/tmp.js";
 import tryWithErrorHandling from "./utils/utils.js";
@@ -20,42 +20,7 @@ const rateLimitInfo = {
 export async function processArguments() {
 	const argv = yargs(hideBin(process.argv))
 		.options(optionUtils.OPTIONS)
-		.check((argv, _) => {
-			const keys = Object.keys(argv);
-
-            const nonEmptyQuery = ["topic", "language", "stars-min", "stars-max", "created-before", "created-after"]
-                                    .map(v => keys.includes(v))
-                                    .some(v => v)
-
-            if (!nonEmptyQuery)
-                throw new Error(
-                   "Search query cannot be empty (add query-specific options)" 
-                );
-            
-            optionUtils.validateQueryComponents(argv);
-
-			if (argv.limit <= 0 || argv.limit > 500)
-				throw new Error(
-					"The provided limit is not within the allowed range (1-500).",
-				);
-
-			if (
-				argv.limit > optionUtils.STDOUT_LIMIT &&
-				argv["output-format"] === "stdout"
-			) {
-				console.warn(
-					`Warning: Limit capped at ${optionUtils.STDOUT_LIMIT} to prevent terminal flooding. Use JSON or CSV for more results.\n`,
-				);
-				argv.limit = optionUtils.STDOUT_LIMIT;
-			}
-
-			if (keys.includes("order") && !keys.includes("sort"))
-				throw new Error(
-					"Order cannot be configured unless sorting criteria is specified.",
-				);
-
-			return true;
-		})
+		.check(optionUtils.validateArguments)
 		.strictOptions(true)
 		.fail((msg, err, _) => {
 			const errorMessage = msg || err.message || "Unknown parsing error.";
