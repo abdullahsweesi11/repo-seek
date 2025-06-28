@@ -648,4 +648,98 @@ describe("Argument parsing", () => {
             )
         })
     })
+
+    // SORT + ORDER
+
+    describe("--sort and --order arguments", () => {
+        const preset = ["node", "index.js", "--language", "javascript"]
+        const basicArgv = {
+            '$0': 'index.js',
+            force: false,
+            'output-format': 'stdout',
+            limit: 30,
+            language: ["javascript"]
+        }
+
+        test("normal execution", async () => {
+            process.argv = [...preset, "--sort", "stars"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "stars"
+                })
+            )
+
+            process.argv = [...preset, "--sort", "forks"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "forks"
+                })
+            )
+
+            process.argv = [...preset, "--sort", "help-wanted-issues"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "help-wanted-issues"
+                })
+            )
+
+            process.argv = [...preset, "--sort", "updated"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "updated"
+                })
+            )
+
+            process.argv = [...preset, "--order", "desc", "--sort", "forks"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "forks",
+                    order: "desc"
+                })
+            )
+
+            process.argv = [...preset, "--order", "asc", "--sort", "updated"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    sort: "updated",
+                    order: "asc"
+                })
+            )
+        })
+
+        test("invalid sort", async () => {
+            process.argv = [...preset, "--sort", "abc"]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: sort, Given: "abc"/
+            )
+
+            process.argv = [...preset, "--sort", 123]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: sort, Given: "123"/
+            )
+        })
+
+        test("invalid order", async () => {
+            process.argv = [...preset, "--order", "abc"]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: order, Given: "abc"/
+            )
+
+            process.argv = [...preset, "--order", 123]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: order, Given: "123"/
+            )
+        })
+
+        test("order without sort", async () => {
+            process.argv = [...preset, "--order", "desc"]
+            await expect(processArguments()).rejects.toThrow("Order cannot be configured unless sorting criteria is specified.")
+        })
+    })
 })
