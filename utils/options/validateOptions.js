@@ -1,20 +1,18 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
+import { getFilePath } from "./confirmOverwrite.js";
 import confirmOverwrite from "./confirmOverwrite.js";
 
 export const STDOUT_LIMIT = 50;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function validateEmptyQuery(argv) {
     const nonEmptyQuery = ["topic", "language", "stars-min", "stars-max", "created-before", "created-after"]
-                            .map(v => v in argv)
-                            .some(v => v)
+        .map(v => v in argv)
+        .some(v => v)
 
     if (!nonEmptyQuery)
         throw new Error(
-            "Search query cannot be empty (add query-specific options)" 
+            "Search query cannot be empty (add query-specific options)"
         );
 }
 
@@ -77,12 +75,12 @@ function validateStars(argv) {
         throw new Error(
             "--stars-min cannot be negative."
         );
-    
+
     if (starsMaxPresent && argv["stars-max"] < 0)
         throw new Error(
             "--stars-max cannot be negative."
         );
-    
+
     if (starsMinPresent && starsMaxPresent && argv['stars-min'] > argv['stars-max'])
         throw new Error(
             "--stars-min cannot be greater than --stars-max"
@@ -98,9 +96,9 @@ function isValidDate(date) {
     const generatedDate = new Date(components[0], components[1] - 1, components[2]);
     if (generatedDate.getUTCFullYear() !== components[0] ||
         generatedDate.getUTCMonth() + 1 !== components[1] ||
-        generatedDate.getUTCDate() !== components[2]) 
+        generatedDate.getUTCDate() !== components[2])
         return false;
-    
+
     return true;
 }
 
@@ -121,14 +119,14 @@ function validateCreated(argv) {
             throw new Error("--created-after must have a format of YYYY-MM-DD.");
     }
 
-    if (createdBeforePresent && createdAfterPresent && 
+    if (createdBeforePresent && createdAfterPresent &&
         (new Date(argv["created-before"])) < (new Date(argv["created-after"])))
         throw new Error("--created-before must be after --created-after")
-    
+
     if (createdBeforePresent && !isValidDate(argv["created-before"]))
         throw new Error("--created-before is an invalid date")
 
-    if (createdAfterPresent && 
+    if (createdAfterPresent &&
         (!isValidDate(argv["created-after"]) || (new Date(argv["created-after"])) > (new Date())))
         throw new Error("--created-after is an invalid date")
 
@@ -151,7 +149,9 @@ async function validateOutputName(argv) {
     if (argv["output-format"] === "stdout")
         throw new Error("Cannot set output name when output format is stdout.");
 
-    const filepath = path.join(__dirname, "..", "..", `${argv['output-name']}`);
+    argv["output-name"] = `${argv["output-name"]}.${argv["output-format"]}`;
+    const filepath = getFilePath(argv['output-name'])
+    
     if (fs.existsSync(filepath) && !argv.force) {
         const confirmed = await confirmOverwrite(filepath);
         if (!confirmed) {
@@ -159,12 +159,13 @@ async function validateOutputName(argv) {
             process.exit(1);
         }
     }
+
 }
 
 
 async function validateOutputFormat(argv) {
     if (argv['output-format'] !== "stdout" && !("output-name" in argv)) {
-        argv["output-name"] = `repo-seek-results.${argv["output-format"]}`;
+        argv["output-name"] = `repo-seek-results`;
         await validateOutputName(argv);
     }
 }

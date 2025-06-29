@@ -1,9 +1,21 @@
 
 import {jest} from "@jest/globals";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-jest.unstable_mockModule('../utils/options/confirmOverwrite.js', () => ({
-    default: jest.fn(() => Promise.resolve(true))
-}));
+global.confirmOverwriteCalled = false;
+
+jest.unstable_mockModule('../utils/options/confirmOverwrite.js', async () => {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    
+    return  {
+        getFilePath: jest.fn(filename => path.join(__dirname, `${filename}`)),
+        default: jest.fn(async () => {
+            global.confirmOverwriteCalled = true;
+            return Promise.resolve(true);
+        })
+    }
+});
 
 const { STDOUT_LIMIT } = await import("../utils/options/validateOptions.js");
 
@@ -16,6 +28,7 @@ describe("Argument parsing", () => {
 
     afterEach(() => {
         process.argv = originalArgv;
+        global.confirmOverwriteCalled = false;
     })
 
     // EMPTY QUERY
@@ -821,9 +834,162 @@ describe("Argument parsing", () => {
         })
     })
 
-    // OUTPUT FORMAT
+    // OUTPUT FORMAT + OUTPUT NAME
 
-    // OUTPUT NAME
+    describe("--output-format and --output-name arguments", () => {
+        const preset = ["node", "index.js", "--language", "javascript"]
+        const basicArgv = {
+            '$0': 'index.js',
+            force: false,
+            language: ["javascript"]
+        }
+
+        const noNameOnStdoutMessage = "Cannot set output name when output format is stdout.";
+
+        // normal executon (separately (diverse inputs) and mixed)
+
+        test("normal execution", async () => {
+            process.argv = [...preset]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "stdout"
+                })
+            )
+
+            process.argv = [...preset, "--output-format", "stdout"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "stdout"
+                })
+            )
+
+            process.argv = [...preset, "--output-name", "my-results", "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "json",
+                    "output-name": "my-results.json",
+                })
+            )
+
+            process.argv = [...preset, "--output-name", 123, "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "json",
+                    "output-name": "123.json",
+                })
+            )
+
+            process.argv = [...preset, "--output-name", "grou3439;',./!\!\"£$%^&*()\\|?><@:}{-=_+`¬", "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "json",
+                    "output-name": "grou3439;',./!\!\"£$%^&*()\\|?><@:}{-=_+`¬.json",
+                })
+            )
+        })
+
+        // confirmOverwrite was called
+
+        test("confirmOverwrite was called", async () => {
+
+            process.argv = [...preset, "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "json",
+                    "output-name": "repo-seek-results.json"
+                })
+            )
+
+            expect(global.confirmOverwriteCalled).toBe(true);
+            global.confirmOverwriteCalled = false;
+
+            process.argv = [...preset, "--output-format", "csv"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    "output-format": "csv",
+                    "output-name": "repo-seek-results.csv"
+                })
+            )
+
+            expect(global.confirmOverwriteCalled).toBe(true);
+
+        })
+
+        test("using --output-name when --output-format is stdout", async () => {
+            process.argv = [...preset, "--output-name", "my-results.json"]
+            await expect(processArguments()).rejects.toThrow(noNameOnStdoutMessage);
+
+            process.argv = [...preset, "--output-name", "my-results.json", "--output-format", "stdout"]
+            await expect(processArguments()).rejects.toThrow(noNameOnStdoutMessage);
+        })
+
+        test("invalid values for --output-format", async () => {
+            process.argv = [...preset, "--output-format", "table"]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: output-format, Given: "table"/
+            );
+
+            process.argv = [...preset, "--output-format", "pdf"]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: output-format, Given: "pdf"/
+            );
+
+            process.argv = [...preset, "--output-format", "document"]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: output-format, Given: "document"/
+            );
+
+            process.argv = [...preset, "--output-format", 123]
+            await expect(processArguments()).rejects.toThrow(
+                /^Invalid values:\n\s*Argument: output-format, Given: "123"/
+            );
+        })
+    })
 
     // FORCE
+
+    describe("--force testing", () => {
+        const preset = ["node", "index.js", "--language", "javascript"]
+        const basicArgv = {
+            '$0': 'index.js',
+            language: ["javascript"],
+            limit: 30
+        }
+
+        test("normal execution", async () => {
+
+            
+            process.argv = [...preset, "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    force: false,
+                    "output-format": "json",
+                    "output-name": "repo-seek-results.json"
+                })
+            )
+
+            expect(global.confirmOverwriteCalled).toBe(true);
+            global.confirmOverwriteCalled = false;
+
+            process.argv = [...preset, "--force", "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    force: true,
+                    "output-format": "json",
+                    "output-name": "repo-seek-results.json"
+                })
+            )
+
+            expect(global.confirmOverwriteCalled).toBe(false);
+        })
+    })
 })
