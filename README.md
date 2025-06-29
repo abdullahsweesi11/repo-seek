@@ -1,21 +1,28 @@
 # repo-seek
 
-This tool will provide a CLI interface for interacting with the Github API ecosystem (which means that different API endpoints might be used for different inputs).
+This tool provides a CLI interface for repository search, using the Github Search API.
 
-Important: the limits imposed by the GitHub API will need to be imposed by this service. Therefore: (list all restrictions at some point)
-In the future, explain clearly the rules (e.g. max 6 query components for topic, language, stars, created).
+This project extends the functionalities that Github already provides, allowing:
+- Exporting to different output formats
+- Removal of urls by default to eliminate clutter, (use --include-urls flag to re-include it)
 
-Note: search will not check for exact matches, but only looks for instances including the search terms
+## Notes
 
-Note: when using "stdout" as the output method, a maximum of 50 results will be displayed to prevent flooding in the terminal. If you need more than 50 results, use "json" or "csv" as the output method.
+- Many of the restrictions imposed by this tool are due to limits imposed by the GitHub Search API
+- Search will not check for exact matches, but only looks for instances including the search terms (similarly to GitHub).
+- No more than 6 instances of query types (i.e. topic, language, stars, created) can be used in a single query, due to restrictions imposed by the GitHub Search API. Examples of invalid queries are '--topic a b c d e f g' and '--language c java --topic game crypto ssh --stars-min 100 --created-before 2024-01-01'
+- When using "stdout" as the output method, a maximum of 50 results will be displayed to prevent flooding in the terminal. If you need more than 50 results, use "json" or "csv" as the output method.
+- Inputting extremely large numbers (>) into numerical types (e.g. limit) can lead to unpredictable results.
 
-Note: inputting extremely large numbers (>) into numerical types can lead to undefined results.
+## Installation & Usage
 
-To make this project worthwhile, it must extend the functionalities that Github already provides (in its website's search bar):
-- Exporting to different output
-- Remove urls by default, and ask users to use --include-urls flag, since urls clutter output
+(Coming soon..)
 
-Users will potentially be able to search repositories based on:
+## Features
+
+To find more about features, use `repo-seek -h`.
+
+Users can search repositories based on:
 
 - Topic:
   - Takes in multiple arguments
@@ -54,26 +61,23 @@ Users will potentially be able to search repositories based on:
   - Argument must be in a specified set (stdout, json, csv)
   - Default: stdout
 
-- Output File:
+- Output File Name:
   - Takes in a single argument
   - Argument can be anything
   - Ask for confirmation: if the file already exists, in which case overwrite
-  - Source of error: Output file can only be specified when output format is json or csv, not pretty
+  - Source of error: Output file can only be specified when output format is json or csv, not stdout
+  - Note: file extension (json, csv) will be automatically added
 
 - Force:
   - Takes no arguments
   - Does not provide any intermediary confirmation, executes directly
 
-Options to add:
-- Search term (most important)
-- Organisation
-- License
-- Visbility
+## Testing
 
-We'll have to think about rate limits, especially considering some queries may take up more tokens. Users may have the option to store a GitHub personal access token in an environment variable (or pass it in as an option) to increase the rate limit. Users might have an option so as to display the number of requests their input would take up (e.g. --dry-run), and how much requests they have left (e.g. --remaining-tokens/requests), as well as general stats (e.g. --stats).
+This project includes some unit testing of the core option processing functionality, using Jest to evaluate test cases and mocking. These tests can be found in 'tests/processArguments.test.js'. Other functionality was tested informally.
 
-We might choose to do some kind of testing.
+## Extending the project
 
-Potentially useful tools:
-- Clean UI: chalk (npm), ora (npm), cli-table3 (npm)
-- CLI arguments: yargs (npm), commander (npm), meow (npm)
+- Additional options for filtering repos can be implemented, such as search term, organisation, license, and visibility
+- Personal Access Token authentication would allow users to perform more complex queries before the rate limit is hit (see Github API docs)
+- More testing can be done
