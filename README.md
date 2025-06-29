@@ -8,6 +8,8 @@ This project extends the functionalities that Github already provides, allowing:
 - Exporting to different output formats
 - Removal of clutter by default (use --raw flag to re-include it)
 
+The npm package can be found at [https://www.npmjs.com/package/repo-seek](https://www.npmjs.com/package/repo-seek)
+
 ## Notes
 
 - Many of the restrictions imposed by this tool are due to limits imposed by the GitHub Search API
