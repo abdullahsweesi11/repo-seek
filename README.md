@@ -76,6 +76,10 @@ Users can search repositories based on:
 
 This project includes some unit testing of the core option processing functionality, using Jest to evaluate test cases and mocking. These tests can be found in 'tests/processArguments.test.js'. Other functionality was tested informally.
 
+## Resources
+
+Node, GitHub Search API, yargs (option argument processing), biome (linting), 'json-2-csv' (for csv output), Jest (for testing)
+
 ## Extending the project
 
 - Additional options for filtering repos can be implemented, such as search term, organisation, license, and visibility
