@@ -992,4 +992,27 @@ describe("Argument parsing", () => {
             expect(global.confirmOverwriteCalled).toBe(false);
         })
     })
+
+    // RAW
+
+    describe("--raw testing", () => {
+        const preset = ["node", "index.js", "--language", "javascript"]
+        const basicArgv = {
+            '$0': 'index.js',
+            language: ["javascript"],
+            limit: 30,
+            "output-format": "stdout",
+            force: false
+        }
+
+        test("normal execution", async () => {
+            process.argv = [...preset, "--raw"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    raw: true,
+                })
+            )
+        })
+    })
 })

@@ -61,14 +61,19 @@ const OPTIONS = {
 	"output-name": {
 		type: "string",
 		describe:
-			"Outputs results into the specified file (only if output-format is not stdout) - default name is repo-seek-results",
+			"Outputs results into the specified file - default name is repo-seek-results",
 		requiresArg: true,
 	},
 	force: {
 		type: "boolean",
-		describe: "Toggles forced execution, without any prompts",
+		describe: "Enables forced execution, without any prompts",
 		default: false,
 	},
+	"raw": {
+		type: "boolean",
+		describe: "Enables return of raw response data, for more repo details",
+		default: false
+	}
 };
 
 async function validateArguments(argv, _) {

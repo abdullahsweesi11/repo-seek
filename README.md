@@ -20,7 +20,7 @@ This project extends the functionalities that Github already provides, allowing:
 
 ## Features
 
-To find more about features, use `repo-seek -h`.
+To find more about features, use `repo-seek -h`. Alternatively, you can view the full specification at 'utils/options/options.js'.
 
 Users can search repositories based on:
 
@@ -69,8 +69,12 @@ Users can search repositories based on:
   - Note: file extension (json, csv) will be automatically added
 
 - Force:
-  - Takes no arguments
-  - Does not provide any intermediary confirmation, executes directly
+  - Takes no arguments (boolean type)
+  - Enables forced execution, without any prompts
+
+- Raw:
+  - Takes no arguments (boolean type)
+  - Enables return of raw response data, for more repo details
 
 ## Testing
 

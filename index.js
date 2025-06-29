@@ -37,8 +37,8 @@ export async function processArguments() {
 }
 
 
-export async function sendRequests(urls) {
-	const items = [];
+export async function sendRequests(urls, raw) {
+	let items = [];
 	let total_count = NaN;
 	let incomplete_results = false;
 
@@ -68,6 +68,36 @@ export async function sendRequests(urls) {
 			throw new Error("Unexpected response format from Github.");
 		items.push(...responseJson.items);
 	}
+	
+	if (!raw)
+		items = items.map(item => ({
+			id: item?.id,
+			name: item?.name,
+			full_name: item?.full_name,
+			description: item?.description,
+			html_url: item?.html_url,
+			homepage: item?.homepage,
+			language: item?.language,
+			stargazers_count: item?.stargazers_count,
+			forks_count: item?.forks_count,
+			open_issues_count: item?.open_issues_count,
+			watchers_count: item?.watchers_count,
+			has_issues: item?.has_issues,
+			has_projects: item?.has_projects,
+			has_downloads: item?.has_downloads,
+			has_wiki: item?.has_wiki,
+			has_pages: item?.has_pages,
+			has_discussions: item?.has_discussions,
+			updated_at: item?.updated_at,
+			license: {
+				name: item?.license?.name
+			},
+			owner: {
+				login: item?.owner?.login,
+				html_url: item?.owner?.html_url,
+				avatar_url: item?.owner?.avatar_url						// profile picture url
+			}
+		}))
 
 	return {
 		total_count,
@@ -121,7 +151,7 @@ export async function main() {
 		}
 	}
 	const results = await tryWithErrorHandling(
-		() => sendRequests(requestUrls),
+		() => sendRequests(requestUrls, argv['raw']),
 		"Server",
 	);
 	await tryWithErrorHandling(
