@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from "node:fs";
 import { json2csv } from "json-2-csv";
 import yargs from "yargs";
@@ -162,8 +164,7 @@ export async function main() {
 		console.warn("Warning:- Results may be incomplete due to request timeout.");
 }
 
-
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && process.argv[1].endsWith('repo-seek')) {
     main().catch((err) => {
         if (err.name && err.name !== "Error")
             console.error(`${err.name} error:- \n${err.message}`);

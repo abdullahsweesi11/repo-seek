@@ -19,7 +19,7 @@ jest.unstable_mockModule('../utils/options/confirmOverwrite.js', async () => {
 
 const { STDOUT_LIMIT } = await import("../utils/options/validateOptions.js");
 
-const {processArguments} = await import("../index.js");
+const {processArguments} = await import("../index.mjs");
 
 
 describe("Argument parsing", () => {

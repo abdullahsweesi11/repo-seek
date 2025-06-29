@@ -4,6 +4,9 @@
 	"type": "module",
 	"description": "",
 	"main": "index.js",
+	"bin": {
+		"repo-seek": "./index.mjs"
+	},
 	"scripts": {
 		"test": "node --experimental-vm-modules node_modules/.bin/jest"
 	},
