@@ -2,9 +2,11 @@
 
 This tool provides a CLI interface for repository search, using the Github Search API.
 
+This project aims to provide a convenient, intuitive interface to the vast sea of GitHub repositories, helping inspire and motivate all types of developers.
+
 This project extends the functionalities that Github already provides, allowing:
 - Exporting to different output formats
-- Removal of urls by default to eliminate clutter, (use --include-urls flag to re-include it)
+- Removal of clutter by default (use --raw flag to re-include it)
 
 ## Notes
 
@@ -14,9 +16,11 @@ This project extends the functionalities that Github already provides, allowing:
 - When using "stdout" as the output method, a maximum of 50 results will be displayed to prevent flooding in the terminal. If you need more than 50 results, use "json" or "csv" as the output method.
 - Inputting extremely large numbers (>) into numerical types (e.g. limit) can lead to unpredictable results.
 
-## Installation & Usage
+## Installation
 
-(Coming soon..)
+This is a Node-based tool that is published on NPM. Therefore, you must have Node (>=20.10.0) and npm installed beforehand.
+
+To install repo-seek globally, run `npm install -g repo-seek`.
 
 ## Features
 
