@@ -17,6 +17,7 @@ const rateLimitInfo = {
 	requestsRefresh: null,
 };
 
+
 export async function processArguments() {
 	const argv = yargs(hideBin(process.argv))
 		.options(optionUtils.OPTIONS)
@@ -32,20 +33,9 @@ export async function processArguments() {
 		})
 		.parse();
 
-	const inputOptions = Object.keys(argv).filter(
-		(key) => key !== "_" && key !== "$0",
-	);
-
-	for (const option of inputOptions) {
-		await optionUtils.validateArguments(option, argv[option], argv);
-	}
-
 	return argv;
 }
 
-export function processRequests(argv) {
-    return requestUtils.generateQueryStrings(argv);                 // remove this redundant function
-}
 
 export async function sendRequests(urls) {
 	const items = [];
@@ -86,6 +76,7 @@ export async function sendRequests(urls) {
 	};
 }
 
+
 export async function displayResults(format, filename, results) {
 	if (format === "stdout") {
 		console.log(results.items);
@@ -105,6 +96,7 @@ export async function displayResults(format, filename, results) {
 	console.log(`Results returned: ${results.items.length}\n`);
 }
 
+
 export async function main() {
 	const rateLimitData = tmpUtils.readTempData(requestUtils.RATE_DATA_NAME);
 	const currentTime = Math.floor(Date.now() / 1000);
@@ -116,7 +108,7 @@ export async function main() {
 
 	const argv = await tryWithErrorHandling(processArguments, "Parsing");
 	const requestUrls = await tryWithErrorHandling(
-		() => processRequests(argv),
+		() => requestUtils.generateQueryStrings(argv),
 		"Validation",
 	);
 	if (requestUrls.length > 1) {
@@ -139,6 +131,7 @@ export async function main() {
 	if (results.incomplete_results)
 		console.warn("Warning:- Results may be incomplete due to request timeout.");
 }
+
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     main().catch((err) => {
