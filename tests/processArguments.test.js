@@ -1,10 +1,13 @@
-import {
-    processArguments,
-    processRequests,
-    sendRequests,
-    displayResults,
-    main
-} from "../index.js";
+
+import {jest} from "@jest/globals";
+
+jest.unstable_mockModule('../utils/options/confirmOverwrite.js', () => ({
+    default: jest.fn(() => Promise.resolve(true))
+}));
+
+const { STDOUT_LIMIT } = await import("../utils/options/validateOptions.js");
+
+const {processArguments} = await import("../index.js");
 
 
 describe("Argument parsing", () => {
@@ -742,4 +745,85 @@ describe("Argument parsing", () => {
             await expect(processArguments()).rejects.toThrow("Order cannot be configured unless sorting criteria is specified.")
         })
     })
+
+    // LIMIT
+
+    describe("--limit arguments", () => {
+        const preset = ["node", "index.js", "--language", "javascript"]
+        const basicArgv = {
+            '$0': 'index.js',
+            force: false,
+            language: ["javascript"]
+        }
+
+        const outOfBoundsMessage = "The provided limit is not within the allowed range (1-500).";
+        const cappedMessage = `Warning: Limit capped at ${STDOUT_LIMIT} to prevent terminal flooding. Use JSON or CSV for more results.`
+
+        test("normal execution", async () => {
+
+            process.argv = [...preset, "--limit", 40]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    limit: 40,
+                    "output-format": "stdout"
+                })
+            )
+
+            process.argv = [...preset, "--limit", 150, "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    limit: 150,
+                    "output-format": "json"
+                })
+            )
+
+            process.argv = [...preset, "--limit", 450, "--output-format", "json"]
+            await expect(processArguments()).resolves.toEqual(
+                expect.objectContaining({
+                    ...basicArgv,
+                    limit: 450,
+                    "output-format": "json"
+                })
+            )
+        })
+
+        test("string argument", async () => {
+            process.argv = [...preset, "--limit", "abc"]
+            await expect(processArguments()).rejects.toThrow("--limit must be a number")
+        })
+
+        // out-of-bounds (<=0 and >500)
+        test("out-of-bounds (<=0 and >500)", async () => {
+            process.argv = [...preset, "--limit", -10]
+            await expect(processArguments()).rejects.toThrow(outOfBoundsMessage)
+
+            process.argv = [...preset, "--limit", 0]
+            await expect(processArguments()).rejects.toThrow(outOfBoundsMessage)
+
+            process.argv = [...preset, "--limit", 501]
+            await expect(processArguments()).rejects.toThrow(outOfBoundsMessage)
+
+            process.argv = [...preset, "--limit", 1000]
+            await expect(processArguments()).rejects.toThrow(outOfBoundsMessage)
+        })
+
+        // warn when capping limit
+        test("warn when limit is capped", async () => {
+            jest.spyOn(console, "warn").mockImplementation();
+            process.argv = [...preset, "--limit", 51]
+            await processArguments();
+
+            expect(console.warn).toHaveBeenCalledWith(
+                expect.stringContaining(cappedMessage)
+            )
+        })
+    })
+
+    // OUTPUT FORMAT
+
+    // OUTPUT NAME
+
+    // FORCE
 })

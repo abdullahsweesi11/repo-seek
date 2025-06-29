@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import rlPromises from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 
-const STDOUT_LIMIT = 50;
+import confirmOverwrite from "./confirmOverwrite.js";
+
+export const STDOUT_LIMIT = 50;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function validateEmptyQuery(argv) {
@@ -140,23 +141,6 @@ function validateOrder(argv) {
         throw new Error(
             "Order cannot be configured unless sorting criteria is specified.",
         );
-}
-
-
-async function confirmOverwrite(file) {
-	const rl = rlPromises.createInterface({
-		input: process.stdin,
-		output: process.stdout,
-	});
-
-	let answer = await rl.question(
-		`Are you sure you want to overwrite '${file}' (Y/n)? `,
-	);
-	rl.close();
-
-	answer = answer.trim().toLowerCase();
-	if (["n", "no"].includes(answer)) return false;
-	return true;
 }
 
 
