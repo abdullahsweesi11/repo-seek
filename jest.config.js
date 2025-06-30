@@ -1,4 +1,4 @@
 export default {
-    transform: {},
-    testEnvironment: "node"
-  };
+	transform: {},
+	testEnvironment: "node",
+};

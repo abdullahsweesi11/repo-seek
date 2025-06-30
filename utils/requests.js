@@ -33,8 +33,7 @@ function queryStringHelper(argv) {
 	const results = [];
 
 	if (limit === 30) {
-        if (prefix)
-		    results.push(prefix);
+		if (prefix) results.push(prefix);
 	} else {
 		if (limit <= 100) {
 			results.push(`${prefix}per_page=${limit}`);
@@ -113,9 +112,9 @@ function generateQueryStrings(argv) {
 				`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}&${queryPart}`,
 			);
 	} else {
-		return [`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}`]
+		return [`${BASE_URL}?q=${encodeURIComponent(queryArray.join(" "))}`];
 	}
-    
+
 	return results;
 }
 

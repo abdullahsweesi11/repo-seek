@@ -1,15 +1,13 @@
-
 import validateOptions from "./validateOptions.js";
-
 
 const OPTIONS = {
 	topic: {
-        string: true,                                                       // 'topic' is an array of strings
+		string: true, // 'topic' is an array of strings
 		type: "array",
 		describe: "Filters in repositories with the specified topic(s)",
 	},
 	language: {
-        string: true,                                                       // 'language' is an array of strings
+		string: true, // 'language' is an array of strings
 		type: "array",
 		describe: "Filters in repositories with the specified language(s)",
 	},
@@ -69,11 +67,11 @@ const OPTIONS = {
 		describe: "Enables forced execution, without any prompts",
 		default: false,
 	},
-	"raw": {
+	raw: {
 		type: "boolean",
 		describe: "Enables return of raw response data, for more repo details",
-		default: false
-	}
+		default: false,
+	},
 };
 
 async function validateArguments(argv, _) {
@@ -108,5 +106,5 @@ async function validateArguments(argv, _) {
 
 export default {
 	validateArguments,
-	OPTIONS
+	OPTIONS,
 };

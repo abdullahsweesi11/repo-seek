@@ -4,7 +4,6 @@ import fs from "node:fs";
 import { json2csv } from "json-2-csv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { fileURLToPath } from "node:url";
 
 import optionUtils from "./utils/options/options.js";
 import requestUtils from "./utils/requests.js";
@@ -18,7 +17,6 @@ const rateLimitInfo = {
 	requestsLimit: 10,
 	requestsRefresh: null,
 };
-
 
 export async function processArguments() {
 	const argv = yargs(hideBin(process.argv))
@@ -38,7 +36,6 @@ export async function processArguments() {
 	return argv;
 }
 
-
 export async function sendRequests(urls, raw) {
 	let items = [];
 	let total_count = NaN;
@@ -56,7 +53,8 @@ export async function sendRequests(urls, raw) {
 				throw new Error(
 					`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`,
 				);
-			} else throw new Error(`(Forwarded from GitHub:) ${responseJson.message}`);
+			} else
+				throw new Error(`(Forwarded from GitHub:) ${responseJson.message}`);
 		}
 
 		if (Number.isNaN(total_count)) total_count = responseJson.total_count;
@@ -70,9 +68,9 @@ export async function sendRequests(urls, raw) {
 			throw new Error("Unexpected response format from Github.");
 		items.push(...responseJson.items);
 	}
-	
+
 	if (!raw)
-		items = items.map(item => ({
+		items = items.map((item) => ({
 			id: item?.id,
 			name: item?.name,
 			full_name: item?.full_name,
@@ -92,14 +90,14 @@ export async function sendRequests(urls, raw) {
 			has_discussions: item?.has_discussions,
 			updated_at: item?.updated_at,
 			license: {
-				name: item?.license?.name
+				name: item?.license?.name,
 			},
 			owner: {
 				login: item?.owner?.login,
 				html_url: item?.owner?.html_url,
-				avatar_url: item?.owner?.avatar_url						// profile picture url
-			}
-		}))
+				avatar_url: item?.owner?.avatar_url, // profile picture url
+			},
+		}));
 
 	return {
 		total_count,
@@ -107,7 +105,6 @@ export async function sendRequests(urls, raw) {
 		items,
 	};
 }
-
 
 export async function displayResults(format, filename, results) {
 	if (format === "stdout") {
@@ -127,7 +124,6 @@ export async function displayResults(format, filename, results) {
 	console.log(`\nTotal count: ${results.total_count}`);
 	console.log(`Results returned: ${results.items.length}\n`);
 }
-
 
 export async function main() {
 	const rateLimitData = tmpUtils.readTempData(requestUtils.RATE_DATA_NAME);
@@ -153,7 +149,7 @@ export async function main() {
 		}
 	}
 	const results = await tryWithErrorHandling(
-		() => sendRequests(requestUrls, argv['raw']),
+		() => sendRequests(requestUrls, argv.raw),
 		"Server",
 	);
 	await tryWithErrorHandling(
@@ -164,11 +160,10 @@ export async function main() {
 		console.warn("Warning:- Results may be incomplete due to request timeout.");
 }
 
-if (process.argv[1] && process.argv[1].endsWith('repo-seek')) {
-    main().catch((err) => {
-        if (err.name && err.name !== "Error")
-            console.error(`${err.name} error:- \n${err.message}`);
-        else
-            console.error(`Unexpected error:- \n${err.message}`);
-    });
+if (process.argv[1]?.endsWith("repo-seek")) {
+	main().catch((err) => {
+		if (err.name && err.name !== "Error")
+			console.error(`${err.name} error:- \n${err.message}`);
+		else console.error(`Unexpected error:- \n${err.message}`);
+	});
 }
