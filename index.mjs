@@ -8,7 +8,7 @@ import { hideBin } from "yargs/helpers";
 import optionUtils from "./utils/options/options.js";
 import requestUtils from "./utils/requests.js";
 import tmpUtils from "./utils/tmp.js";
-import tryWithErrorHandling from "./utils/utils.js";
+import tryWithErrorHandling from "./utils/tryWithErrorHandling.js";
 
 // if authentication is added, these attributes need to be set dynamically
 
@@ -50,9 +50,15 @@ export async function sendRequests(urls, raw) {
 				rateLimitInfo.requestsRefresh =
 					+response.headers.get("x-ratelimit-reset");
 				tmpUtils.writeTempData(rateLimitInfo, requestUtils.RATE_DATA_NAME);
-				throw new Error(
-					`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`,
-				);
+				let errorMessage;
+				if (responseJson.message.startsWith("API rate limit exceeded for ")) {
+					throw new Error(`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`)
+				} else {
+					throw new Error(
+						`Something went wrong on GitHub's end. Message received from GitHub API:\n\n`
+						+responseJson.message
+					);
+				}
 			} else
 				throw new Error(`(Forwarded from GitHub:) ${responseJson.message}`);
 		}
@@ -110,7 +116,7 @@ export async function displayResults(format, filename, results) {
 	if (format === "stdout") {
 		console.log(results.items);
 	} else if (format === "json") {
-		fs.writeFileSync(filename, JSON.stringify(results.items), "utf-8");
+		fs.writeFileSync(filename, JSON.stringify(results.items, null, 4), "utf-8");
 		console.log(`\nResults can be found in '${filename}'`);
 	} else {
 		fs.writeFileSync(filename, await json2csv(results.items), "utf-8");
@@ -129,9 +135,11 @@ export async function main() {
 	const rateLimitData = tmpUtils.readTempData(requestUtils.RATE_DATA_NAME);
 	const currentTime = Math.floor(Date.now() / 1000);
 	if (rateLimitData?.requestsRefresh > currentTime) {
-		throw new Error(
+		const rateLimitError = new Error(
 			`The rate limit of ${rateLimitInfo.requestsLimit} requests/min has been reached. Please try again soon.`,
 		);
+		rateLimitError.name = "Server"
+		throw rateLimitError
 	}
 
 	const argv = await tryWithErrorHandling(processArguments, "Parsing");
@@ -160,10 +168,10 @@ export async function main() {
 		console.warn("Warning:- Results may be incomplete due to request timeout.");
 }
 
-if (process.argv[1]?.endsWith("repo-seek")) {
+if (process.argv[1]?.endsWith("repo-seek") || process.argv[0].endsWith("node")) {
 	main().catch((err) => {
 		if (err.name && err.name !== "Error")
-			console.error(`${err.name} error:- \n${err.message}`);
+			console.error(`\n${err.name} error:- \n${err.message}`);
 		else console.error(`Unexpected error:- \n${err.message}`);
 	});
 }

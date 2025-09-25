@@ -18,6 +18,8 @@ export default async function confirmOverwrite(file) {
 		`Are you sure you want to overwrite '${file}' (Y/n)? `,
 	);
 	rl.close();
+	
+	console.log("\n")
 
 	answer = answer.trim().toLowerCase();
 	if (["n", "no"].includes(answer)) return false;

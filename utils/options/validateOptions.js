@@ -52,9 +52,9 @@ function validateNumericTypes(argv) {
 }
 
 function validateLimit(argv) {
-	if (argv.limit <= 0 || argv.limit > 500)
+	if (argv.limit <= 0 || argv.limit > 500 || !Number.isInteger(argv.limit))
 		throw new Error(
-			"The provided limit is not within the allowed range (1-500).",
+			"The limit must be a non-negative integer between 1 and 500 (inclusive).",
 		);
 
 	if (argv.limit > STDOUT_LIMIT && argv["output-format"] === "stdout") {
@@ -69,11 +69,11 @@ function validateStars(argv) {
 	const starsMinPresent = "stars-min" in argv;
 	const starsMaxPresent = "stars-max" in argv;
 
-	if (starsMinPresent && argv["stars-min"] < 0)
-		throw new Error("--stars-min cannot be negative.");
+	if (starsMinPresent && (argv["stars-min"] < 0 || !Number.isInteger(argv["stars-min"])))
+		throw new Error("--stars-min must be a non-negative integer.");
 
-	if (starsMaxPresent && argv["stars-max"] < 0)
-		throw new Error("--stars-max cannot be negative.");
+	if (starsMaxPresent && (argv["stars-max"] < 0 || !Number.isInteger(argv["stars-max"])))
+		throw new Error("--stars-max must be a non-negative integer.");
 
 	if (
 		starsMinPresent &&
