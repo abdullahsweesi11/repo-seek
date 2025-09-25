@@ -2,56 +2,56 @@ import validateOptions from "./validateOptions.js";
 
 const OPTIONS = {
 	topic: {
-		string: true, // 'topic' is an array of strings
+		string: true,
 		type: "array",
-		describe: "Filters in repositories with the specified topic(s)",
+		describe: "Filter in repositories with the desired topic(s)",
 	},
 	language: {
-		string: true, // 'language' is an array of strings
+		string: true,
 		type: "array",
-		describe: "Filters in repositories with the specified language(s)",
+		describe: "Filter in repositories with the desired language(s)",
 	},
 	"stars-min": {
 		type: "number",
-		describe: "Filters out repositories less than the specified minimum",
+		describe: "Filter in repositories with n stars or more",
 		requiresArg: true,
 	},
 	"stars-max": {
 		type: "number",
-		describe: "Filters out repositories greater than the specified maximum",
-		requiresArg: true,
-	},
-	"created-before": {
-		type: "string",
-		describe: "Filters out repositories after the specified date",
+		describe: "Filter in repositories with n stars or less",
 		requiresArg: true,
 	},
 	"created-after": {
 		type: "string",
-		describe: "Filters out repositories before the specified date",
+		describe: "Filter in repositories created on or after a specific date",
+		requiresArg: true,
+	},
+	"created-before": {
+		type: "string",
+		describe: "Filter in repositories created on or before a specific date",
 		requiresArg: true,
 	},
 	sort: {
 		type: "string",
-		describe: "Sorts resulting repositories based on the specified attribute",
+		describe: "Sort repositories based on some criteria",
 		choices: ["stars", "forks", "help-wanted-issues", "updated"],
 		requiresArg: true,
 	},
 	order: {
 		type: "string",
-		describe: "Applies sorting in the specified order",
+		describe: "Apply sorting in some order",
 		choices: ["desc", "asc"],
 		requiresArg: true,
 	},
 	limit: {
 		type: "number",
-		describe: "Sets an upper limit for the number of results (max 500)",
+		describe: "Set an upper limit for the result count (1-500)",
 		default: 30,
 		requiresArg: true,
 	},
 	"output-format": {
 		type: "string",
-		describe: "Outputs results in the specified format",
+		describe: "Output the result in some format",
 		default: "stdout",
 		choices: ["stdout", "json", "csv"],
 		requiresArg: true,
@@ -59,17 +59,17 @@ const OPTIONS = {
 	"output-name": {
 		type: "string",
 		describe:
-			"Outputs results into the specified file - default name is repo-seek-results",
+			"Output the result into a file with some name (default: repo-seek-results)",
 		requiresArg: true,
 	},
 	force: {
 		type: "boolean",
-		describe: "Enables forced execution, without any prompts",
+		describe: "Enable forced execution without any prompts",
 		default: false,
 	},
 	raw: {
 		type: "boolean",
-		describe: "Enables return of raw response data, for more repo details",
+		describe: "Enable raw response data for more detailed information",
 		default: false,
 	},
 };

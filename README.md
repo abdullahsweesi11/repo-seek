@@ -68,7 +68,7 @@ Additionally, users can adjust processing configurations using the following opt
   - Default: best match _(combination of different factors computed internally by GitHub)_
 
 - Order:
-  - Apply sorting (see above) in some order
+  - Apply sorting in some order
   - Option: --order
   - Number of arguments: 1
   - Argument constraints: Must be one of (desc, asc)

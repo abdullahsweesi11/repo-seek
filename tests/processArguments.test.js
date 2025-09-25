@@ -747,22 +747,22 @@ describe("Argument parsing", () => {
 		test("negative arguments", async () => {
 			process.argv = [...preset, "--stars-min", -123];
 			await expect(processArguments()).rejects.toThrow(
-				"--stars-min cannot be negative.",
+				"--stars-min must be a non-negative integer.",
 			);
 
 			process.argv = [...preset, "--stars-min", Number.MIN_SAFE_INTEGER];
 			await expect(processArguments()).rejects.toThrow(
-				"--stars-min cannot be negative.",
+				"--stars-min must be a non-negative integer.",
 			);
 
 			process.argv = [...preset, "--stars-max", -123];
 			await expect(processArguments()).rejects.toThrow(
-				"--stars-max cannot be negative.",
+				"--stars-max must be a non-negative integer.",
 			);
 
 			process.argv = [...preset, "--stars-max", Number.MIN_SAFE_INTEGER];
 			await expect(processArguments()).rejects.toThrow(
-				"--stars-max cannot be negative.",
+				"--stars-max must be a non-negative integer.",
 			);
 		});
 
@@ -1048,7 +1048,7 @@ describe("Argument parsing", () => {
 		};
 
 		const outOfBoundsMessage =
-			"The provided limit is not within the allowed range (1-500).";
+			"The limit must be a non-negative integer between 1 and 500 (inclusive).";
 		const cappedMessage = `Warning: Limit capped at ${STDOUT_LIMIT} to prevent terminal flooding. Use JSON or CSV for more results.`;
 
 		test("normal execution", async () => {
