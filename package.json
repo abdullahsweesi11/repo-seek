@@ -8,8 +8,7 @@
 		"repo-seek": "./index.mjs"
 	},
 	"scripts": {
-		"test": "node --experimental-vm-modules node_modules/.bin/jest",
-		"dev": "node index.mjs"
+		"test": "node --experimental-vm-modules node_modules/.bin/jest"
 	},
 	"author": "",
 	"license": "ISC",

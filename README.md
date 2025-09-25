@@ -2,11 +2,11 @@
 
 This tool provides a CLI interface for repository search, using the Github Search API.
 
-This project aims to provide a convenient, intuitive interface to the vast sea of GitHub repositories, helping inspire and motivate all types of developers.
+This project aims to provide a convenient, intuitive interface to the vast sea of GitHub repositories, helping inspire and motivate developers.
 
-This project extends the functionalities that Github already provides, allowing:
-- Exporting to different output formats
-- Removal of clutter by default (use --raw flag to re-include it)
+This project extends the functionalities provided by Github Search to the command-line, as well as allowing:
+- Exports to different output formats
+- Removal of noisy data by default (use --raw flag to re-include it)
 
 The npm package can be found at [https://www.npmjs.com/package/repo-seek](https://www.npmjs.com/package/repo-seek)
 
@@ -123,8 +123,8 @@ This project includes some unit testing of the core option processing functional
 
 ## Notes
 
-- Many of the restrictions imposed by this tool are due to limits imposed by the GitHub Search API
-- Search will not check for exact matches, but only looks for instances including the search terms (similarly to GitHub).
+- Many of the restrictions imposed by this tool are due to constraints enforced by the GitHub Search API
+- Search queries will not check for exact matches, but only look for instances including the search terms (similarly to GitHub's website).
 - No more than 6 instances of query types (i.e. topic, language, star count, creation date) can be used in a single query, due to restrictions imposed by the GitHub Search API. Examples of invalid queries are '--topic a b c d e f g' and '--language c java --topic game crypto ssh --stars-min 100 --created-before 2024-01-01'
 - Inputting extremely large numbers into numerical types (e.g. limit) may lead to unpredictable results.
 
